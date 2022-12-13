@@ -1,117 +1,188 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
-import React from 'react';
-import type {Node} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
+  StatusBar,
   Text,
-  useColorScheme,
+  TouchableOpacity,
+  Image,
   View,
+  Alert,
 } from 'react-native';
-
 import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  ActivityIndicator,
+  Title,
+  Modal,
+  Portal,
+  Button,
+  Provider,
+  Card,
+  Avatar,
+  IconButton,
+} from 'react-native-paper';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {launchCamera, showImagePicker} from 'react-native-image-picker';
 
-/* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
- * LTI update could not be added via codemod */
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+export default function App({navigation, route}) {
+  const [imageSource, setImageSource] = useState(null);
+  const [visible, setVisible] = React.useState(false);
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
+  const containerStyle = {backgroundColor: 'white', padding: 10, margin: 10};
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const selectCameraImage = () => {
+    launchCamera({}, response => {
+      console.log({response});
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+      if (response.didCancel) {
+        console.log('User cancelled photo picker');
+        Alert.alert('You did not select any image');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
+      } else {
+        console.log(response.uri);
+        let source = {uri: response.uri};
+        console.log({source});
+      }
+    });
+  };
+
+  const selectGalleryImage = () => {
+    showImagePicker(
+      {
+        maxWidth: 256,
+        maxHeight: 256,
+      },
+      response => {
+        console.log({response});
+
+        if (response.didCancel) {
+          console.log('User cancelled photo picker');
+          Alert.alert('You did not select any image');
+        } else if (response.error) {
+          console.log('ImagePicker Error: ', response.error);
+        } else if (response.customButton) {
+          console.log('User tapped custom button: ', response.customButton);
+        } else {
+          let source = {uri: response.assets[0].uri};
+          console.log(response.assets[0].uri);
+        }
+      },
+    );
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <Provider>
+    <SafeAreaView style={styles.container}>
+        <TouchableOpacity
+          onPress={showModal}
+          style={styles.selectButtonContainer}>
+          <Text style={styles.selectButtonTitle}>Product image</Text>
+        </TouchableOpacity>
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={hideModal}
+            contentContainerStyle={styles.containerStyle}>
+            <Title>Pick Product Image</Title>
+            <TouchableOpacity onPress={selectCameraImage}>
+              <Card.Title
+                style={{
+                  borderStyle: 'solid',
+                  borderWidth: 1,
+                  borderColor: '#f6f6f6',
+                  paddingHorizontal: 10,
+                  marginTop: 15,
+                }}
+                subtitle="Take Photo"
+                subtitleStyle={{
+                  fontSize: 18,
+                  marginLeft: 40,
+                  textTransform: 'capitalize',
+                }}
+                left={props => (
+                  <Image
+                    source={
+                      'https://www.yorkartgallery.org.uk/wp-content/uploads/sites/5/2019/06/CAG_New_Art_Installs_York_Museums-0029-scaled.jpg'
+                    }
+                    style={{
+                      width: 80,
+                      height: 40,
+                    }}
+                    resizeMode="center"
+                  />
+                )}
+                leftStyle={{marginLeft: -20}}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={selectGalleryImage}>
+              <Card.Title
+                style={{
+                  borderStyle: 'solid',
+                  borderWidth: 1,
+                  borderTopWidth: 0,
+                  borderColor: 'f7f7f7',
+                  paddingHorizontal: 10,
+                }}
+                subtitle="Pick from Gallery"
+                subtitleStyle={{
+                  fontSize: 18,
+                  marginLeft: 40,
+                }}
+                left={props => (
+                  <Image
+                    source={
+                      'https://www.yorkartgallery.org.uk/wp-content/uploads/sites/5/2019/06/CAG_New_Art_Installs_York_Museums-0029-scaled.jpg'
+                    }
+                    style={{
+                      width: 80,
+                      height: 40,
+                    }}
+                    resizeMode="center"
+                  />
+                )}
+                leftStyle={{marginLeft: -20}}
+              />
+            </TouchableOpacity>
+          </Modal>
+        </Portal>
     </SafeAreaView>
+      </Provider>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  selectButtonTitle: {
+    paddingHorizontal: 15,
+    paddingVertical: 20,
+    fontSize: 16,
+    width: '40%',
+    borderColor: 'f7f7f7',
+    borderStyle: 'dashed',
+    borderRadius: 5,
+    borderWidth: 2,
+    textAlign: 'center',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  selectButtonContainer: {
+    margin: 10,
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: 'f7f7f7',
+    flexShrink: 1,
   },
-  highlight: {
-    fontWeight: '700',
+  containerStyle: {backgroundColor: 'white', padding: 20, margin: 20},
+  optionStyles: {
+    backgroundColor: 'f7f7f7',
+    paddingHorizontal: 40,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  titleStyle: {
+    textAlign: 'center',
   },
 });
-
-export default App;
